@@ -25,7 +25,13 @@ async def main():
             for tool in tools.tools:
                 print(tool.name)
 
-            result = await session.call_tool("get_balance", arguments={"customer_id": 101})
+            result = await session.call_tool(
+                "find_meeting",
+                arguments={
+                    "date": "2026-09-16",
+                    "keyword": "client"
+                }
+            )
 
             print("Result:")
             print(result)

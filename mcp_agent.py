@@ -1,5 +1,3 @@
-      
-
 import asyncio
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -9,7 +7,10 @@ from langchain.agents import create_agent
 
 async def main():
 
-    # MCP server connect
+    # ==============================================
+    # CONNECT TO MCP SERVER
+    # ==============================================
+
     client = MultiServerMCPClient(
         {
             "financial": {
@@ -19,24 +20,44 @@ async def main():
         }
     )
 
-    # MCP server-la irukkura tools eduthukkum
+
+    # ==============================================
+    # GET TOOLS FROM MCP SERVER
+    # ==============================================
+
     tools = await client.get_tools()
 
-    # Local AI
+
+    # ==============================================
+    # LOCAL AI MODEL
+    # ==============================================
+
     model = ChatOllama(
         model="qwen3:4b"
     )
 
-    # AI + tools
+
+    # ==============================================
+    # CREATE AGENT
+    # ==============================================
+
     agent = create_agent(
         model,
         tools
     )
 
-    # User question
+
+    # ==============================================
+    # USER REQUEST
+    # ==============================================
+
     question = input("Ask your question: ")
 
-    # AI question understand panni tool choose/call pannum
+
+    # ==============================================
+    # SEND REQUEST TO AGENT
+    # ==============================================
+
     response = await agent.ainvoke(
         {
             "messages": [
@@ -48,7 +69,18 @@ async def main():
         }
     )
 
-    print(response["messages"][-1].content)
 
+    # ==============================================
+    # PRINT FINAL RESPONSE
+    # ==============================================
+
+    print(
+        response["messages"][-1].content
+    )
+
+
+# ==============================================
+# START
+# ==============================================
 
 asyncio.run(main())
