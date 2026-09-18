@@ -85,8 +85,8 @@ gmail_service = build(
 @mcp.tool()
 def find_meeting(date: str, keyword: str):
     """
-    Find a meeting in Google Calendar using date and meeting keyword.
-    Returns meeting details and the attached Gemini Notes document ID if available.
+    Find a meeting in Google Calendar using date and keyword.
+    Searches the meeting title, description, location, and attendees.
     """
 
     events = calendar_service.events().list(
@@ -99,35 +99,47 @@ def find_meeting(date: str, keyword: str):
 
     matches = []
 
+    keyword_lower = keyword.lower()
+
     for event in events.get("items", []):
         title = event.get("summary", "")
+        description = event.get("description", "")
+        location = event.get("location", "")
 
-        if keyword.lower() in title.lower():
+        attendees = [
+            attendee.get("email", "")
+            for attendee in event.get("attendees", [])
+        ]
 
-            attendees = [
-                attendee.get("email")
-                for attendee in event.get("attendees", [])
-            ]
+        search_text = " ".join([
+            title,
+            description,
+            location,
+            " ".join(attendees)
+        ]).lower()
 
-            attachments = event.get("attachments", [])
+        if keyword_lower not in search_text:
+            continue
 
-            notes_doc_id = None
+        attachments = event.get("attachments", [])
 
-            for attachment in attachments:
-                if attachment.get(
-                    "mimeType"
-                ) == "application/vnd.google-apps.document":
-                    notes_doc_id = attachment.get("fileId")
-                    break
+        notes_doc_id = None
 
-            matches.append({
-                "meeting_id": event.get("id"),
-                "meeting_name": title,
-                "start": event.get("start"),
-                "end": event.get("end"),
-                "attendees": attendees,
-                "gemini_notes_doc_id": notes_doc_id
-            })
+        for attachment in attachments:
+            if attachment.get(
+                "mimeType"
+            ) == "application/vnd.google-apps.document":
+                notes_doc_id = attachment.get("fileId")
+                break
+
+        matches.append({
+            "meeting_id": event.get("id"),
+            "meeting_name": title,
+            "start": event.get("start"),
+            "end": event.get("end"),
+            "attendees": attendees,
+            "gemini_notes_doc_id": notes_doc_id
+        })
 
     if not matches:
         return {
